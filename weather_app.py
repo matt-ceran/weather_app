@@ -2,6 +2,19 @@ import requests
 import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk  
+import geocoder
+
+def get_location():
+    try:
+        location = geocoder.ip('me')
+        if location.city:
+            return location.city
+        else:
+            return "Location not found:"
+    except Exception as e:
+        print("Error detecting location:", e)
+        return "Location not found"
+
 
 def get_weather(city, unit):
     api_key = "cea48bdc21a9473299701605243010"  
@@ -38,16 +51,22 @@ def get_icon_path(description):
     else:
         return "icons/unknown.png"  
 
+
+
 def show_weather():
     city = city_entry.get()
     unit = unit_var.get()
-    if city:
-        result, icon_path = get_weather(city, unit)
- 
-        messagebox.showinfo("Weather", result)
-        
+    
+    if not city: 
+        city = detected_city
+    
+    print(f"Fetching weather for: {city}, Unit: {unit}")
+
+    result, icon_path = get_weather(city, unit)
+
+    messagebox.showinfo("Weather", result)
        
-        if icon_path:
+    if icon_path:
             try:
                 weather_icon = Image.open(icon_path)
                 weather_icon = weather_icon.resize((50, 50), Image.LANCZOS)
@@ -62,13 +81,17 @@ def show_weather():
         messagebox.showwarning("Input Required", "Please enter a city name.")
 
 
+
+
 root = tk.Tk()
 root.title("Weather App")
 root.geometry("300x300")  
 root.configure(bg="#87CEEB")  
 
 
+detected_city = get_location()
 city_entry = tk.Entry(root, width=20, font=("Arial", 14))
+city_entry.insert(0, detected_city)
 city_entry.pack(pady=10)
 
 
